@@ -789,9 +789,41 @@ function openSupplierModal(supplierId){
         <div class="error-box" id="supplierError"></div>
         <div class="form-grid">
           <div class="field full">
-            <label>Tedarikçi Adı</label>
-            <input type="text" id="s-name" value="${esc(s.name)}" placeholder="Örn. Tedarikçi A">
-          </div>
+  <label>Tedarikçi Adı</label>
+  <select id="s-name">
+    <option value="">Tedarikçi seçiniz</option>
+    ${[
+      "AKSA ELEKTRİK",
+      "AYDEM",
+      "CK AKDENİZ",
+      "CK BOĞAZİÇİ",
+      "DEPSAŞ",
+      "EÇE ENERJİ",
+      "EKVATOR ENERJİ",
+      "ENERJİSA",
+      "ENERJİSA ÜRETİM",
+      "GEDİZ",
+      "İPRAGAZ ELEKTRİK",
+      "KEPSAŞ",
+      "KOLEN",
+      "MET",
+      "MEPAŞ",
+      "MY ENERJİ",
+      "RÖNESANS ELEKTRİK",
+      "SANKO",
+      "SEPAŞ",
+      "SOCAR",
+      "ŞİŞECAM ENERJİ",
+      "ULUDAĞ ELEKTRİK",
+      "YEPAŞ",
+      "ZENERGY"
+    ].map(name => `
+      <option value="${esc(name)}" ${s.name === name ? 'selected' : ''}>
+        ${esc(name)}
+      </option>
+    `).join('')}
+  </select>
+</div>
           <div class="field">
             <label>Marj Oranı (%)</label>
             <input type="number" id="s-marj" value="${s.marj}" min="0" step="any" placeholder="Örn. 3.25">
