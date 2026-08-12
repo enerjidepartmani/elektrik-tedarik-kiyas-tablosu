@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELKOM ELEKTRİK — Elektrik Tedarik Teklifi Karşılaştırma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-950:#0a1526;
+  --navy-900:#0e1c31;
+  --navy-800:#152a47;
+  --navy-700:#1e3a5f;
+  --slate-50:#f6f8fb;
+  --slate-100:#eef1f6;
+  --slate-200:#e1e6ee;
+  --slate-300:#c7cedb;
+  --slate-500:#7c8aa0;
+  --slate-600:#5b6a80;
+  --slate-800:#28374d;
+  --ink:#0e1c31;
+  --amber:#e8a13d;
+  --amber-dark:#c07f1e;
+  --emerald:#12946b;
+  --emerald-light:#e3f6ee;
+  --red:#c0435a;
+  --white:#ffffff;
+  --radius:14px;
+  --radius-sm:9px;
+  --shadow-card:0 1px 2px rgba(14,28,49,.06), 0 8px 24px -12px rgba(14,28,49,.18);
+  --shadow-pop:0 20px 60px -20px rgba(10,21,38,.45);
+  font-family:'Inter',sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--slate-50);color:var(--ink);}
+body{-webkit-font-smoothing:antialiased;}
+.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+.disp{font-family:'Space Grotesk',sans-serif;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+#app{display:flex;min-height:100vh;}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:280px;flex:0 0 280px;background:linear-gradient(180deg,var(--navy-950),var(--navy-900) 60%);
+  color:#dbe4f2;display:flex;flex-direction:column;padding:22px 18px 18px;gap:16px;position:sticky;top:0;height:100vh;
+}
+.brand{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:.2px;color:#fff;padding:2px 4px 4px;}
+.brand .bolt{color:var(--amber);font-size:22px;}
+.brand span{font-weight:500;color:var(--slate-300);font-size:13px;display:block;letter-spacing:1.5px;margin-top:2px;}
+.brand-wrap{display:flex;flex-direction:column;gap:0;}
+
+.btn-add-customer{
+  background:var(--amber);color:var(--navy-950);border:none;border-radius:var(--radius-sm);
+  padding:12px 14px;font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:8px;
+  box-shadow:0 8px 20px -6px rgba(232,161,61,.5);transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn-add-customer:hover{transform:translateY(-1px);box-shadow:0 10px 24px -6px rgba(232,161,61,.6);}
+.btn-add-customer:active{transform:translateY(0);}
+
+.sidebar-label{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--slate-500);margin:6px 2px -4px;font-weight:600;}
+
+.customer-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-right:-8px;padding-right:8px;}
+.customer-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;border-radius:10px;
+  cursor:pointer;border:1px solid transparent;transition:background .12s ease;
+}
+.customer-item:hover{background:rgba(255,255,255,.05);}
+.customer-item.active{background:var(--navy-700);border-color:rgba(255,255,255,.08);}
+.customer-item .ci-name{font-weight:600;font-size:14px;color:#eef2f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.customer-item .ci-meta{font-size:11.5px;color:var(--slate-500);margin-top:2px;}
+.customer-item .ci-del{opacity:0;background:none;border:none;color:var(--slate-500);font-size:15px;padding:2px 5px;border-radius:6px;}
+.customer-item:hover .ci-del{opacity:1;}
+.customer-item .ci-del:hover{color:var(--red);background:rgba(192,67,90,.12);}
+
+.sidebar-empty{color:var(--slate-500);font-size:13px;padding:14px 6px;line-height:1.5;}
+
+.btn-settings{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);color:#c9d4e5;
+  border-radius:var(--radius-sm);padding:11px 12px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;
+}
+.btn-settings:hover{background:rgba(255,255,255,.08);}
+
+/* ---------- Main ---------- */
+.main{flex:1;min-width:0;padding:28px 34px 60px;}
+.empty-state{max-width:520px;margin:14vh auto 0;text-align:center;color:var(--slate-600);}
+.empty-state .es-icon{font-size:46px;margin-bottom:14px;}
+.empty-state h2{font-family:'Space Grotesk',sans-serif;color:var(--ink);margin:0 0 8px;font-size:23px;}
+.empty-state p{line-height:1.6;font-size:14.5px;}
+
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap;}
+.topbar h1{font-family:'Space Grotesk',sans-serif;font-size:25px;margin:0 0 4px;color:var(--ink);}
+.topbar .sub{color:var(--slate-600);font-size:13.5px;}
+.topbar-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+.btn{border:none;border-radius:10px;padding:11px 16px;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;transition:filter .12s ease, transform .1s;}
+.btn:active{transform:translateY(1px);}
+.btn-navy{background:var(--navy-900);color:#fff;}
+.btn-navy:hover{filter:brightness(1.15);}
+.btn-outline{background:#fff;color:var(--navy-900);border:1px solid var(--slate-200);}
+.btn-outline:hover{background:var(--slate-100);}
+.btn-amber{background:var(--amber);color:var(--navy-950);}
+.btn-amber:hover{filter:brightness(1.06);}
+.btn-danger-ghost{background:transparent;color:var(--red);border:1px solid rgba(192,67,90,.3);}
+.btn-danger-ghost:hover{background:rgba(192,67,90,.08);}
+.btn-sm{padding:7px 11px;font-size:12.5px;border-radius:8px;}
+
+/* summary */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.summary-card{background:#fff;border:1px solid var(--slate-200);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-card);}
+.summary-card .sc-label{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--slate-500);font-weight:600;margin-bottom:6px;}
+.summary-card .sc-value{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--ink);line-height:1.2;}
+.summary-card.hero{background:linear-gradient(135deg,var(--navy-950),var(--navy-800));color:#fff;border:none;}
+.summary-card.hero .sc-label{color:var(--slate-300);}
+.summary-card.hero .sc-value{color:#fff;}
+.summary-card .sc-value.emerald{color:var(--emerald);}
+
+/* savings banner */
+.savings-banner{
+  display:flex;align-items:center;gap:22px;background:linear-gradient(90deg,var(--emerald-light),#fff 70%);
+  border:1px solid #cdece1;border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;flex-wrap:wrap;
+}
+.savings-banner .sb-icon{width:44px;height:44px;border-radius:50%;background:var(--emerald);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;}
+.savings-banner .sb-text b{color:var(--emerald);}
+.savings-banner .sb-text{font-size:13.5px;color:var(--slate-800);line-height:1.5;}
+.savings-banner .sb-num{margin-left:auto;text-align:right;}
+.savings-banner .sb-num .amt{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--emerald);}
+.savings-banner .sb-num .pct{font-size:12.5px;color:var(--slate-600);}
+
+.section-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-toolbar h2{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0;color:var(--ink);}
+.section-toolbar .count-pill{background:var(--slate-100);color:var(--slate-600);font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;margin-left:8px;}
+
+/* cards grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:16px;}
+.offer-card{
+  background:#fff;border:1px solid var(--slate-200);border-radius:16px;padding:18px 18px 16px;position:relative;
+  box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:12px;transition:transform .12s ease, box-shadow .12s ease;
+}
+.offer-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(14,28,49,.08), 0 16px 34px -14px rgba(14,28,49,.24);}
+.offer-card.best{border-color:var(--emerald);box-shadow:0 0 0 1.5px var(--emerald), var(--shadow-card);}
+.offer-ribbon{
+  position:absolute;top:-11px;left:16px;background:var(--emerald);color:#fff;font-size:10.5px;font-weight:700;
+  letter-spacing:.6px;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;box-shadow:0 6px 14px -4px rgba(18,148,107,.55);
+}
+.oc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.oc-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16.5px;color:var(--ink);line-height:1.25;}
+.oc-desc{font-size:11.5px;color:var(--slate-500);margin-top:2px;}
+.oc-head-actions{display:flex;gap:4px;flex:0 0 auto;}
+.icon-btn{background:none;border:none;color:var(--slate-500);font-size:14px;padding:4px 6px;border-radius:6px;line-height:1;}
+.icon-btn:hover{background:var(--slate-100);color:var(--navy-900);}
+.icon-btn.danger:hover{background:rgba(192,67,90,.1);color:var(--red);}
+
+.marj-row{display:flex;flex-direction:column;gap:5px;}
+.marj-row .mr-top{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--slate-500);font-weight:600;}
+.marj-row .mr-val{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:600;font-size:12.5px;}
+.gauge{height:7px;border-radius:6px;background:var(--slate-100);position:relative;overflow:hidden;}
+.gauge-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--emerald),var(--amber) 60%,var(--red));}
+.gauge-marker{position:absolute;top:-3px;width:3px;height:13px;background:var(--navy-900);border-radius:2px;transform:translateX(-1.5px);}
+
+.oc-price{display:flex;align-items:baseline;gap:6px;padding:2px 0;}
+.oc-price .p-val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15.5px;color:var(--ink);}
+.oc-price .p-lbl{font-size:11px;color:var(--slate-500);}
+
+.breakdown{display:flex;flex-direction:column;border-top:1px dashed var(--slate-200);border-bottom:1px dashed var(--slate-200);padding:8px 0;gap:0;}
+.bd-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:var(--slate-600);}
+.bd-row .bd-val{font-family:'IBM Plex Mono',monospace;color:var(--slate-800);font-weight:500;}
+.bd-row.sub{padding-left:10px;color:var(--slate-500);font-size:11.5px;}
+
+.oc-total{display:flex;flex-direction:column;gap:2px;padding-top:2px;}
+.oc-total .t-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--slate-500);font-weight:700;}
+.oc-total .t-val{font-family:'Space Grotesk',sans-serif;font-size:25px;font-weight:700;color:var(--navy-950);}
+.offer-card.best .oc-total .t-val{color:var(--emerald);}
+
+.oc-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.tag{font-size:11.5px;font-weight:600;padding:6px 10px;border-radius:9px;display:flex;flex-direction:column;gap:1px;flex:1;min-width:110px;}
+.tag .tag-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;opacity:.75;font-weight:700;}
+.tag.teminat{background:#eef2f9;color:var(--navy-800);}
+.tag.vade-on{background:#fdf1dd;color:var(--amber-dark);}
+.tag.vade-off{background:#eef2f9;color:var(--navy-800);}
+
+.oc-disadvantage{font-size:12px;font-weight:700;border-radius:9px;padding:9px 11px;text-align:center;letter-spacing:.1px;}
+.oc-disadvantage.bad{background:#fdeeef;color:var(--red);}
+.oc-disadvantage.ref{background:var(--emerald-light);color:var(--emerald);}
+
+.detail-toggle{background:none;border:none;color:var(--navy-700);font-size:12px;font-weight:600;text-align:left;padding:2px 0;display:flex;align-items:center;gap:5px;}
+.detail-toggle .car{transition:transform .15s ease;}
+.detail-toggle.open .car{transform:rotate(90deg);}
+.detail-pane{display:none;flex-direction:column;gap:4px;font-size:12px;color:var(--slate-600);background:var(--slate-50);border-radius:8px;padding:10px 12px;}
+.detail-pane.open{display:flex;}
+.detail-pane .dp-row{display:flex;justify-content:space-between;}
+.detail-pane .dp-row b{color:var(--ink);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+
+.empty-suppliers{grid-column:1/-1;text-align:center;color:var(--slate-500);padding:40px 10px;border:1.5px dashed var(--slate-300);border-radius:16px;font-size:13.5px;}
+
+/* ---------- modal ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,18,32,.55);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px 5vh;overflow-y:auto;z-index:100;backdrop-filter:blur(2px);}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:560px;box-shadow:var(--shadow-pop);overflow:hidden;}
+.modal.wide{max-width:760px;}
+.modal-head{padding:20px 24px 14px;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-family:'Space Grotesk',sans-serif;margin:0;font-size:18px;}
+.modal-head .mh-sub{font-size:12px;color:var(--slate-500);margin-top:2px;}
+.modal-close{background:none;border:none;font-size:20px;color:var(--slate-500);padding:4px 8px;border-radius:8px;}
+.modal-close:hover{background:var(--slate-100);}
+.modal-body{padding:20px 24px;max-height:66vh;overflow-y:auto;}
+.modal-foot{padding:14px 24px 22px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--slate-100);}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid .full{grid-column:1/-1;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;font-weight:600;color:var(--slate-800);}
+.field .hint{font-size:10.5px;color:var(--slate-500);font-weight:400;}
+.field input[type=text],.field input[type=number],.field input[type=month],.field select,.field textarea{
+  border:1px solid var(--slate-200);border-radius:9px;padding:10px 11px;font-size:13.5px;background:#fbfcfe;color:var(--ink);width:100%;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--navy-700);outline-offset:1px;background:#fff;}
+.field textarea{resize:vertical;min-height:60px;}
+.unit-row{display:flex;gap:8px;}
+.unit-row input{flex:1;}
+.unit-row select{flex:0 0 96px;}
+
+.error-box{background:#fdeeef;border:1px solid #f3c6cc;color:var(--red);font-size:12.5px;padding:10px 12px;border-radius:9px;margin-bottom:14px;display:none;line-height:1.5;}
+.error-box.show{display:block;}
+
+.settings-table{width:100%;border-collapse:collapse;margin-bottom:18px;}
+.settings-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--slate-500);padding:0 8px 8px;font-weight:700;}
+.settings-table td{padding:5px 8px;}
+.settings-table td input{width:100%;border:1px solid var(--slate-200);border-radius:8px;padding:8px 9px;font-size:13px;}
+.settings-table tr td:first-child{font-size:13px;font-weight:600;color:var(--ink);padding-right:14px;white-space:nowrap;}
+.settings-group-title{font-size:13px;font-weight:700;color:var(--navy-900);margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+.settings-group-title:first-child{margin-top:0;}
+
+.toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.toast{background:var(--navy-950);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;box-shadow:var(--shadow-pop);opacity:0;transform:translateY(10px);transition:all .25s ease;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{background:var(--red);}
+
+/* ---------- print ---------- */
+#printRoot{display:none;}
+@media print{
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+  body *{visibility:hidden;}
+  #printRoot, #printRoot *{visibility:visible;}
+  #printRoot{display:block;position:absolute;top:0;left:0;width:100%;}
+  @page{size:landscape;margin:8mm;}
+}
+.pt-wrap{font-family:'Inter',sans-serif;color:var(--ink);}
+.pt-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
+  background:linear-gradient(135deg,var(--navy-950),var(--navy-800));border-radius:14px;padding:14px 20px;color:#fff;
+}
+.pt-header .pt-brand{display:flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--slate-300);letter-spacing:.6px;margin-bottom:3px;}
+.pt-header h1{font-family:'Space Grotesk',sans-serif;font-size:19px;margin:0;color:#fff;}
+.pt-header .pt-sub{font-size:11px;color:var(--slate-300);margin-top:2px;}
+.pt-header .pt-meta{font-size:10.5px;color:var(--slate-300);text-align:right;line-height:1.7;}
+.pt-header .pt-meta b{color:#fff;font-family:'IBM Plex Mono',monospace;}
+
+.pt-strip{display:flex;gap:10px;margin-bottom:12px;}
+.pt-stat{flex:1;background:#fff;border:1px solid var(--slate-200);border-radius:11px;padding:8px 12px;}
+.pt-stat .pl{font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--slate-500);font-weight:700;}
+.pt-stat .pv{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--ink);margin-top:2px;}
+.pt-stat.emerald .pv{color:var(--emerald);}
+
+.pt-grid{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);gap:0.7em;}
+.pt-card{
+  border:1px solid var(--slate-200);border-radius:0.9em;padding:0.85em 0.95em;position:relative;background:#fff;
+  break-inside:avoid;display:flex;flex-direction:column;gap:0.35em;
+}
+.pt-card.best{border:1.5px solid var(--emerald);background:linear-gradient(180deg,var(--emerald-light),#fff 55%);}
+.pt-ribbon{
+  position:absolute;top:-0.65em;left:0.7em;background:var(--emerald);color:#fff;font-size:0.6em;font-weight:700;
+  letter-spacing:.3px;padding:0.28em 0.65em;border-radius:1em;
+}
+.pt-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.02em;color:var(--ink);line-height:1.2;}
+.pt-marjline{display:flex;justify-content:space-between;align-items:center;font-size:0.72em;color:var(--slate-500);font-weight:600;}
+.pt-marjline b{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:1.05em;}
+.pt-gauge{height:0.35em;border-radius:0.3em;background:var(--slate-100);position:relative;overflow:hidden;}
+.pt-gauge-fill{position:absolute;inset:0;background:linear-gradient(90deg,var(--emerald),var(--amber) 60%,var(--red));}
+.pt-gauge-mark{position:absolute;top:-0.15em;width:0.16em;height:0.65em;background:var(--navy-900);border-radius:0.1em;}
+.pt-price{font-size:0.78em;color:var(--slate-600);margin:0.1em 0;}
+.pt-price b{font-family:'IBM Plex Mono',monospace;color:var(--ink);}
+.pt-rows{font-size:0.68em;line-height:1.65;border-top:1px dashed var(--slate-200);border-bottom:1px dashed var(--slate-200);padding:0.35em 0;color:var(--slate-600);}
+.pt-row{display:flex;justify-content:space-between;}
+.pt-row span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--slate-800);font-weight:500;}
+.pt-total{display:flex;flex-direction:column;gap:1px;margin-top:0.1em;}
+.pt-total .tl{font-size:0.62em;text-transform:uppercase;letter-spacing:.5px;color:var(--slate-500);font-weight:700;}
+.pt-total .tv{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.35em;color:var(--navy-950);}
+.pt-card.best .pt-total .tv{color:var(--emerald);}
+.pt-tags{display:flex;gap:0.4em;}
+.pt-tag{background:var(--slate-100);color:var(--navy-800);border-radius:0.55em;padding:0.32em 0.5em;font-size:0.62em;font-weight:600;flex:1;}
+.pt-disadv{font-size:0.64em;font-weight:700;border-radius:0.5em;padding:0.36em 0.5em;text-align:center;}
+.pt-disadv.bad{background:#fdeeef;color:var(--red);}
+.pt-disadv.ref{background:var(--emerald-light);color:var(--emerald);}
+.pt-footer{margin-top:10px;font-size:9px;color:var(--slate-500);display:flex;justify-content:space-between;border-top:1px solid var(--slate-200);padding-top:6px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modalRoot"></div>
+<div id="printRoot"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ============================= STATE ============================= */
+const STORAGE_KEY = 'data';
+let state = {
+  customers: [],
+  activeCustomerId: null,
+  settings: {
+    dagitim: {
+      Sanayi:      { cift: 1.070498, tek: 1.182457 },
+      Ticarethane: { cift: 1.668345, tek: 2.081065 },
+      SogukHava:   { cift: 1.070498, tek: 1.182457 }
+    },
+    guc: {
+      Sanayi:      { cift: 35.575915 },
+      Ticarethane: { cift: 89.147520 },
+      SogukHava:   { cift: 35.575915 }
+    },
+    btv: { Sanayi: 1, Ticarethane: 5, SogukHava: 1 },
+    kdv: 20
+  }
+};
+
+const ABONE_GRUPLARI = ['Sanayi','Ticarethane','Soğuk Hava Deposu'];
+const TARIFE_TIPLERI = ['Tek Terim','Çift Terim'];
+const VADE_SECENEKLERI = ['T-20','T-15','T-10','T-5','T-1','T+5','T+10','T+15','T+20','T+25','T+30'];
+
+function aboneKey(g){ return g==='Sanayi' ? 'Sanayi' : g==='Ticarethane' ? 'Ticarethane' : 'SogukHava'; }
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+
+/* ============================= PERSISTENCE ============================= */
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify({customers: state.customers, settings: state.settings, activeCustomerId: state.activeCustomerId}), false);
+  }catch(e){ console.error('Kaydetme hatası', e); }
+}
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed.customers) state.customers = parsed.customers;
+      if(parsed.settings) state.settings = Object.assign(state.settings, parsed.settings);
+      if(parsed.activeCustomerId) state.activeCustomerId = parsed.activeCustomerId;
+    }
+  }catch(e){ /* no existing data yet */ }
+}
+
+/* ============================= FORMATTERS ============================= */
+function fmtTL(n){
+  if(!isFinite(n)) n = 0;
+  return n.toLocaleString('tr-TR',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' TL';
+}
+function fmtNum(n, dec){
+  if(!isFinite(n)) n = 0;
+  return n.toLocaleString('tr-TR',{minimumFractionDigits:dec||0, maximumFractionDigits:dec||0});
+}
+function fmtPrice4(n){
+  if(!isFinite(n)) n = 0;
+  return n.toLocaleString('tr-TR',{minimumFractionDigits:4, maximumFractionDigits:4});
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ============================= CALCULATION ENGINE ============================= */
+// Central engine — used identically by cards, detail panes and PDF export.
+function hesaplaTeklif(customer, supplier, settings){
+  const ptfKwh    = customer.ptfUnit === 'MWh' ? (customer.ptf||0)/1000 : (customer.ptf||0);
+  const yekdemKwh = customer.yekdemUnit === 'MWh' ? (customer.yekdem||0)/1000 : (customer.yekdem||0);
+  const marjOrani = (supplier.marj||0)/100;
+  const birimFiyat = (ptfKwh + yekdemKwh) * (1 + marjOrani);
+  const tuketim = customer.tuketim || 0;
+  const aktifToplam = tuketim * birimFiyat;
+
+  const ak = aboneKey(customer.aboneGrubu);
+  const tk = customer.tarifeTipi === 'Çift Terim' ? 'cift' : 'tek';
+
+  const dagitimBirim = (settings.dagitim[ak] && settings.dagitim[ak][tk]) || 0;
+  const dagitimToplam = tuketim * dagitimBirim;
+
+  let gucBedeliBirim = 0, gucBedeliToplam = 0;
+  if(customer.tarifeTipi === 'Çift Terim'){
+    gucBedeliBirim = (settings.guc[ak] && settings.guc[ak].cift) || 0;
+    gucBedeliToplam = (customer.sozlesmeGucu||0) * gucBedeliBirim;
+  }
+
+  const gucAsimBedeli = (customer.gucAsimMiktar||0) * (customer.gucAsimBirim||0);
+
+  const btvOrani = settings.btv[ak] || 0;
+  const btv = aktifToplam * (btvOrani/100);
+
+  const araToplam = aktifToplam + dagitimToplam + gucBedeliToplam + gucAsimBedeli + btv;
+  const kdv = araToplam * (settings.kdv/100);
+  const faturaToplami = araToplam + kdv;
+
+  let teminatTutari = 0;
+  if(supplier.teminatType === 'Ozel'){
+    teminatTutari = supplier.teminatCustom || 0;
+  } else {
+    teminatTutari = (parseInt(supplier.teminatType,10)||0) * faturaToplami;
+  }
+
+  return { ptfKwh, yekdemKwh, birimFiyat, aktifToplam, dagitimBirim, dagitimToplam,
+           gucBedeliBirim, gucBedeliToplam, gucAsimBedeli, btvOrani, btv, araToplam, kdv,
+           faturaToplami, teminatTutari };
+}
+
+function getActiveCustomer(){
+  return state.customers.find(c => c.id === state.activeCustomerId) || null;
+}
+function sortedSuppliersWithCalc(customer){
+  const settings = state.settings;
+  const list = (customer.suppliers||[]).map(s => ({ supplier: s, calc: hesaplaTeklif(customer, s, settings) }));
+  list.sort((a,b) => (a.supplier.marj||0) - (b.supplier.marj||0));
+  return list;
+}
+
+/* ============================= TOAST ============================= */
+function toast(msg, isErr){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  requestAnimationFrame(()=> el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(), 300); }, 3200);
+}
+
+/* ============================= RENDER: APP SHELL ============================= */
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <aside class="sidebar">
+      <div class="brand-wrap">
+        <div class="brand"><span class="bolt">⚡</span>ELKOM ELEKTRİK</div>
+        <span class="brand" style="font-size:11px;font-weight:500;color:var(--slate-500);letter-spacing:1px;margin-top:-2px;">TEDARİK TEKLİFİ KARŞILAŞTIRMA</span>
+      </div>
+      <button class="btn-add-customer" data-action="open-customer-modal">+ Müşteri Ekle</button>
+      <div class="sidebar-label">Müşteriler (${state.customers.length})</div>
+      <div class="customer-list">${renderCustomerList()}</div>
+      <button class="btn-settings" data-action="open-settings-modal">⚙️ Tarife Parametreleri</button>
+    </aside>
+    <main class="main">${getActiveCustomer() ? renderCustomerView(getActiveCustomer()) : renderEmptyState()}</main>
+  `;
+}
+
+function renderCustomerList(){
+  if(state.customers.length === 0){
+    return `<div class="sidebar-empty">Henüz müşteri eklenmedi. Başlamak için "+ Müşteri Ekle" butonuna tıklayın.</div>`;
+  }
+  return state.customers.map(c => {
+    const n = (c.suppliers||[]).length;
+    return `
+    <div class="customer-item ${c.id===state.activeCustomerId?'active':''}" data-action="select-customer" data-id="${c.id}">
+      <div style="min-width:0;">
+        <div class="ci-name">${esc(c.name)}</div>
+        <div class="ci-meta">${esc(c.aboneGrubu)} · ${n} teklif</div>
+      </div>
+      <button class="ci-del" data-action="delete-customer" data-id="${c.id}" title="Müşteriyi sil">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderEmptyState(){
+  return `
+  <div class="empty-state">
+    <div class="es-icon">🧮</div>
+    <h2>Karşılaştırmaya başlamak için bir müşteri ekleyin</h2>
+    <p>Her müşteri için tüketim, tarife ve tedarikçi bilgilerini ayrı ayrı yönetebilir, tedarikçi tekliflerini marjlarına göre otomatik sıralanan modern kartlarla karşılaştırabilirsiniz.</p>
+    <button class="btn btn-navy" style="margin-top:6px;" data-action="open-customer-modal">+ İlk Müşteriyi Ekle</button>
+  </div>`;
+}
+
+/* ---------- customer view ---------- */
+function renderCustomerView(customer){
+  const list = sortedSuppliersWithCalc(customer);
+  const best = list[0];
+  const worst = list[list.length-1];
+  const teklifSayisi = list.length;
+
+  let savingsHtml = '';
+  if(teklifSayisi >= 2){
+    const fark = worst.calc.faturaToplami - best.calc.faturaToplami;
+    const pct = worst.calc.faturaToplami ? (fark/worst.calc.faturaToplami*100) : 0;
+    savingsHtml = `
+    <div class="savings-banner">
+      <div class="sb-icon">💡</div>
+      <div class="sb-text">En iyi teklif <b>${esc(best.supplier.name)}</b> (%${fmtNum(best.supplier.marj,2)} marj), en yüksek teklife göre
+      <b>${fmtTL(fark)}</b> tasarruf sağlıyor.</div>
+      <div class="sb-num"><div class="amt">${fmtTL(fark)}</div><div class="pct">Tasarruf Avantajı · %${fmtNum(pct,1)}</div></div>
+    </div>`;
+  }
+
+  const cardsHtml = teklifSayisi === 0
+    ? `<div class="empty-suppliers">Bu müşteri için henüz tedarikçi teklifi eklenmedi.<br><button class="btn btn-navy btn-sm" style="margin-top:12px;" data-action="open-supplier-modal">+ Tedarikçi Ekle</button></div>`
+    : list.map((item, idx) => renderOfferCard(customer, item, idx===0, list[0].calc)).join('');
+
+  return `
+  <div class="customer-topmeta" style="display:none;"></div>
+  <header class="topbar">
+    <div>
+      <h1>${esc(customer.name)}</h1>
+      <div class="sub">${esc(customer.aboneGrubu)} · ${esc(customer.tarifeTipi)} ${customer.tuketimDonemi ? '· ' + esc(customer.tuketimDonemi) : ''}</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" data-action="open-customer-modal" data-id="${customer.id}">✏️ Müşteriyi Düzenle</button>
+      <button class="btn btn-amber" data-action="export-pdf">⬇ PDF'ye Aktar</button>
+    </div>
+  </header>
+
+  <section class="summary-grid">
+    <div class="summary-card hero">
+      <div class="sc-label">Tüketim</div>
+      <div class="sc-value">${fmtNum(customer.tuketim)} <span style="font-size:12px;font-weight:500;">kWh</span></div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">PTF</div>
+      <div class="sc-value">${fmtNum(customer.ptf,4)} <span style="font-size:11px;color:var(--slate-500);">TL/${customer.ptfUnit}</span></div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">YEKDEM</div>
+      <div class="sc-value">${fmtNum(customer.yekdem,4)} <span style="font-size:11px;color:var(--slate-500);">TL/${customer.yekdemUnit}</span></div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Teklif Sayısı</div>
+      <div class="sc-value">${teklifSayisi}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">En İyi Teklif</div>
+      <div class="sc-value emerald">${best ? '%'+fmtNum(best.supplier.marj,2) : '—'}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">En Düşük Fatura</div>
+      <div class="sc-value">${best ? fmtTL(best.calc.faturaToplami) : '—'}</div>
+    </div>
+  </section>
+
+  ${savingsHtml}
+
+  <section class="section-toolbar">
+    <h2>Tedarikçi Teklifleri <span class="count-pill">${teklifSayisi}</span></h2>
+    <button class="btn btn-navy btn-sm" data-action="open-supplier-modal">+ Tedarikçi Ekle</button>
+  </section>
+  <section class="cards-grid" id="cardsGrid">${cardsHtml}</section>
+  `;
+}
+
+function renderOfferCard(customer, item, isBest, bestCalc){
+  const s = item.supplier, c = item.calc;
+  const allMarjs = (customer.suppliers||[]).map(x=>x.marj||0);
+  const minM = Math.min(...allMarjs), maxM = Math.max(...allMarjs);
+  const range = (maxM - minM) || 1;
+  const pos = ((s.marj||0) - minM) / range * 100;
+
+  const teminatLabel = s.teminatType === 'Ozel' ? 'Özel Tutar' : `${s.teminatType} Fatura`;
+  const vadeLabel = s.vade || '—';
+  const vadeOnPeriod = vadeLabel.startsWith('T+');
+
+  const diffTL = c.faturaToplami - bestCalc.faturaToplami;
+  const diffPct = bestCalc.faturaToplami ? (diffTL / bestCalc.faturaToplami * 100) : 0;
+  const disadvantageHtml = isBest
+    ? `<div class="oc-disadvantage ref">★ Referans Teklif — En Düşük Fatura</div>`
+    : `<div class="oc-disadvantage bad">En iyi teklife göre +${fmtTL(diffTL)} (+%${fmtNum(diffPct,1)}) daha pahalı</div>`;
+
+  return `
+  <div class="offer-card ${isBest?'best':''}">
+    ${isBest ? `<div class="offer-ribbon">★ EN İYİ TEKLİF</div>` : ''}
+    <div class="oc-head">
+      <div>
+        <div class="oc-name">${esc(s.name)}</div>
+        ${s.aciklama ? `<div class="oc-desc">${esc(s.aciklama)}</div>` : ''}
+      </div>
+      <div class="oc-head-actions">
+        <button class="icon-btn" data-action="open-supplier-modal" data-id="${s.id}" title="Düzenle">✏️</button>
+        <button class="icon-btn danger" data-action="delete-supplier" data-id="${s.id}" title="Sil">🗑</button>
+      </div>
+    </div>
+
+    <div class="marj-row">
+      <div class="mr-top"><span>MARJ ORANI</span><span class="mr-val">%${fmtNum(s.marj,2)}</span></div>
+      <div class="gauge"><div class="gauge-fill" style="width:100%;"></div><div class="gauge-marker" style="left:${pos}%;"></div></div>
+    </div>
+
+    <div class="oc-price">
+      <span class="p-val num">${fmtPrice4(c.birimFiyat)} TL/kWh</span>
+      <span class="p-lbl">birim enerji fiyatı</span>
+    </div>
+
+    <div class="breakdown">
+      <div class="bd-row"><span>Aktif Enerji Bedeli</span><span class="bd-val">${fmtTL(c.aktifToplam)}</span></div>
+      <div class="bd-row"><span>Dağıtım Bedeli</span><span class="bd-val">${fmtTL(c.dagitimToplam)}</span></div>
+      ${customer.tarifeTipi==='Çift Terim' ? `<div class="bd-row"><span>Güç Bedeli</span><span class="bd-val">${fmtTL(c.gucBedeliToplam)}</span></div>` : ''}
+      ${c.gucAsimBedeli>0 ? `<div class="bd-row"><span>Güç Aşım Bedeli</span><span class="bd-val">${fmtTL(c.gucAsimBedeli)}</span></div>` : ''}
+      <div class="bd-row"><span>BTV (%${fmtNum(c.btvOrani,0)})</span><span class="bd-val">${fmtTL(c.btv)}</span></div>
+      <div class="bd-row"><span>Ara Toplam</span><span class="bd-val">${fmtTL(c.araToplam)}</span></div>
+      <div class="bd-row"><span>KDV (%${fmtNum(state.settings.kdv,0)})</span><span class="bd-val">${fmtTL(c.kdv)}</span></div>
+    </div>
+
+    <div class="oc-total">
+      <div class="t-lbl">Toplam Fatura</div>
+      <div class="t-val num">${fmtTL(c.faturaToplami)}</div>
+    </div>
+
+    <div class="oc-tags">
+      <div class="tag teminat"><span class="tag-lbl">Teminat</span>${esc(teminatLabel)} · ${fmtTL(c.teminatTutari)}</div>
+      <div class="tag ${vadeOnPeriod?'vade-on':'vade-off'}"><span class="tag-lbl">Vade</span>${esc(vadeLabel)}</div>
+    </div>
+
+    ${disadvantageHtml}
+
+    <button class="detail-toggle" data-action="toggle-detail" data-id="${s.id}"><span class="car">▶</span> Hesaplama Detayını Gör</button>
+    <div class="detail-pane" id="detail-${s.id}">
+      <div class="dp-row"><span>PTF</span><b>${fmtNum(c.ptfKwh,4)} TL/kWh</b></div>
+      <div class="dp-row"><span>YEKDEM</span><b>${fmtNum(c.yekdemKwh,4)} TL/kWh</b></div>
+      <div class="dp-row"><span>Marj</span><b>%${fmtNum(s.marj,2)}</b></div>
+      <div class="dp-row"><span>Birim Fiyat</span><b>${fmtPrice4(c.birimFiyat)} TL/kWh</b></div>
+      <div class="dp-row"><span>Tüketim</span><b>${fmtNum(customer.tuketim)} kWh</b></div>
+      <div class="dp-row"><span>Dağıtım Birim Bedeli</span><b>${fmtNum(c.dagitimBirim,6)} TL/kWh</b></div>
+      ${customer.tarifeTipi==='Çift Terim' ? `<div class="dp-row"><span>Güç Bedeli Birim</span><b>${fmtNum(c.gucBedeliBirim,6)} TL/kW</b></div>` : ''}
+      <div class="dp-row"><span>Ara Toplam</span><b>${fmtTL(c.araToplam)}</b></div>
+      <div class="dp-row"><span>KDV Toplamı</span><b>${fmtTL(c.kdv)}</b></div>
+      <div class="dp-row"><span>Fatura Toplamı</span><b>${fmtTL(c.faturaToplami)}</b></div>
+    </div>
+  </div>`;
+}
+
+/* ============================= MODALS ============================= */
+function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+
+function openCustomerModal(customerId){
+  const editing = customerId ? state.customers.find(c=>c.id===customerId) : null;
+  const c = editing || { name:'', aboneGrubu:'Sanayi', tarifeTipi:'Çift Terim', tuketimDonemi:'', tuketim:'', sozlesmeGucu:'',
+                          ptf:'', ptfUnit:'MWh', yekdem:'', yekdemUnit:'MWh', gucAsimMiktar:'', gucAsimBirim:'' };
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal wide" data-stop>
+      <div class="modal-head">
+        <div><h3>${editing ? 'Müşteriyi Düzenle' : 'Yeni Müşteri Ekle'}</h3><div class="mh-sub">Tüketim, tarife ve enerji birim fiyatı bilgilerini girin.</div></div>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="error-box" id="customerError"></div>
+        <div class="form-grid">
+          <div class="field full">
+            <label>Müşteri Adı</label>
+            <input type="text" id="f-name" value="${esc(c.name)}" placeholder="Örn. ABC Plastik">
+          </div>
+          <div class="field">
+            <label>Abone Grubu</label>
+            <select id="f-abone">${ABONE_GRUPLARI.map(g=>`<option ${c.aboneGrubu===g?'selected':''}>${g}</option>`).join('')}</select>
+          </div>
+          <div class="field">
+            <label>Tarife Tipi</label>
+            <select id="f-tarife">${TARIFE_TIPLERI.map(t=>`<option ${c.tarifeTipi===t?'selected':''}>${t}</option>`).join('')}</select>
+          </div>
+          <div class="field">
+            <label>Tüketim Dönemi <span class="hint">(opsiyonel)</span></label>
+            <input type="text" id="f-donem" value="${esc(c.tuketimDonemi)}" placeholder="Örn. Ocak 2026">
+          </div>
+          <div class="field">
+            <label>Toplam Tüketim (kWh)</label>
+            <input type="number" id="f-tuketim" value="${c.tuketim}" min="0" step="any" placeholder="Örn. 1250000">
+          </div>
+          <div class="field">
+            <label>Sözleşme Gücü (kW) <span class="hint">çift terimde kullanılır</span></label>
+            <input type="number" id="f-guc" value="${c.sozlesmeGucu}" min="0" step="any" placeholder="Örn. 500">
+          </div>
+          <div class="field">
+            <label>PTF</label>
+            <div class="unit-row">
+              <input type="number" id="f-ptf" value="${c.ptf}" min="0" step="any" placeholder="Örn. 2000">
+              <select id="f-ptf-unit"><option ${c.ptfUnit==='MWh'?'selected':''}>MWh</option><option ${c.ptfUnit==='kWh'?'selected':''}>kWh</option></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>YEKDEM</label>
+            <div class="unit-row">
+              <input type="number" id="f-yekdem" value="${c.yekdem}" min="0" step="any" placeholder="Örn. 500">
+              <select id="f-yekdem-unit"><option ${c.yekdemUnit==='MWh'?'selected':''}>MWh</option><option ${c.yekdemUnit==='kWh'?'selected':''}>kWh</option></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Güç Aşımı Miktarı (kW) <span class="hint">opsiyonel</span></label>
+            <input type="number" id="f-gucasim" value="${c.gucAsimMiktar}" min="0" step="any">
+          </div>
+          <div class="field">
+            <label>Güç Aşım Birim Bedeli (TL/kW) <span class="hint">opsiyonel</span></label>
+            <input type="number" id="f-gucasimbirim" value="${c.gucAsimBirim}" min="0" step="any">
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-action="close-modal">Vazgeç</button>
+        <button class="btn btn-navy" data-action="save-customer" data-id="${editing?editing.id:''}">${editing?'Kaydet':'Müşteriyi Ekle'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openSupplierModal(supplierId){
+  const customer = getActiveCustomer();
+  if(!customer){ return; }
+  const editing = supplierId ? (customer.suppliers||[]).find(s=>s.id===supplierId) : null;
+  const s = editing || { name:'', marj:'', teminatType:'2', teminatCustom:'', vade:'T+10', aciklama:'' };
+  const isCustomVade = !VADE_SECENEKLERI.includes(s.vade);
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal" data-stop>
+      <div class="modal-head">
+        <div><h3>${editing?'Teklifi Düzenle':'Tedarikçi Teklifi Ekle'}</h3><div class="mh-sub">${esc(customer.name)} için</div></div>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="error-box" id="supplierError"></div>
+        <div class="form-grid">
+          <div class="field full">
+            <label>Tedarikçi Adı</label>
+            <input type="text" id="s-name" value="${esc(s.name)}" placeholder="Örn. Tedarikçi A">
+          </div>
+          <div class="field">
+            <label>Marj Oranı (%)</label>
+            <input type="number" id="s-marj" value="${s.marj}" min="0" step="any" placeholder="Örn. 3.25">
+          </div>
+          <div class="field">
+            <label>Teminat</label>
+            <select id="s-teminat">
+              ${[1,2,3,4,5].map(n=>`<option value="${n}" ${String(s.teminatType)===String(n)?'selected':''}>${n} Fatura</option>`).join('')}
+              <option value="Ozel" ${s.teminatType==='Ozel'?'selected':''}>Özel Tutar</option>
+            </select>
+          </div>
+          <div class="field" id="s-teminat-custom-wrap" style="${s.teminatType==='Ozel'?'':'display:none;'}">
+            <label>Özel Teminat Tutarı (TL)</label>
+            <input type="number" id="s-teminat-custom" value="${s.teminatCustom}" min="0" step="any">
+          </div>
+          <div class="field">
+            <label>Vade</label>
+            <select id="s-vade">
+              ${VADE_SECENEKLERI.map(v=>`<option ${s.vade===v?'selected':''}>${v}</option>`).join('')}
+              <option value="__custom__" ${isCustomVade?'selected':''}>Özel</option>
+            </select>
+          </div>
+          <div class="field" id="s-vade-custom-wrap" style="${isCustomVade?'':'display:none;'}">
+            <label>Özel Vade</label>
+            <input type="text" id="s-vade-custom" value="${isCustomVade?esc(s.vade):''}" placeholder="Örn. T+45">
+          </div>
+          <div class="field full">
+            <label>Açıklama <span class="hint">opsiyonel</span></label>
+            <textarea id="s-aciklama" placeholder="Tedarikçiye dair notlar...">${esc(s.aciklama||'')}</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-action="close-modal">Vazgeç</button>
+        <button class="btn btn-navy" data-action="save-supplier" data-id="${editing?editing.id:''}">${editing?'Kaydet':'Teklifi Ekle'}</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('s-teminat').addEventListener('change', e=>{
+    document.getElementById('s-teminat-custom-wrap').style.display = e.target.value==='Ozel' ? '' : 'none';
+  });
+  document.getElementById('s-vade').addEventListener('change', e=>{
+    document.getElementById('s-vade-custom-wrap').style.display = e.target.value==='__custom__' ? '' : 'none';
+  });
+}
+
+function openSettingsModal(){
+  const st = state.settings;
+  const root = document.getElementById('modalRoot');
+  const groups = [['Sanayi','Sanayi'],['Ticarethane','Ticarethane'],['SogukHava','Soğuk Hava Deposu']];
+  root.innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal wide" data-stop>
+      <div class="modal-head">
+        <div><h3>Tarife ve Birim Fiyat Parametreleri</h3><div class="mh-sub">Mevzuat veya tarife değişikliklerinde bu değerleri güncelleyin.</div></div>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-group-title">📐 Dağıtım Bedelleri (TL/kWh)</div>
+        <table class="settings-table">
+          <tr><th>Abone Grubu</th><th>Çift Terim</th><th>Tek Terim</th></tr>
+          ${groups.map(([key,label])=>`
+          <tr><td>${label}</td>
+            <td><input type="number" step="any" id="set-dag-${key}-cift" value="${st.dagitim[key].cift}"></td>
+            <td><input type="number" step="any" id="set-dag-${key}-tek" value="${st.dagitim[key].tek}"></td>
+          </tr>`).join('')}
+        </table>
+
+        <div class="settings-group-title">🔌 Güç Bedelleri — Çift Terim (TL/kW)</div>
+        <table class="settings-table">
+          <tr><th>Abone Grubu</th><th>Güç Bedeli</th></tr>
+          ${groups.map(([key,label])=>`
+          <tr><td>${label}</td>
+            <td><input type="number" step="any" id="set-guc-${key}" value="${st.guc[key].cift}"></td>
+          </tr>`).join('')}
+        </table>
+
+        <div class="settings-group-title">🧾 BTV Oranları (%)</div>
+        <table class="settings-table">
+          <tr><th>Abone Grubu</th><th>BTV Oranı</th></tr>
+          ${groups.map(([key,label])=>`
+          <tr><td>${label}</td>
+            <td><input type="number" step="any" id="set-btv-${key}" value="${st.btv[key]}"></td>
+          </tr>`).join('')}
+        </table>
+
+        <div class="settings-group-title">💰 KDV Oranı (%)</div>
+        <table class="settings-table">
+          <tr><td style="width:180px;">Genel KDV Oranı</td><td><input type="number" step="any" id="set-kdv" value="${st.kdv}"></td></tr>
+        </table>
+        <div style="font-size:11.5px;color:var(--slate-500);line-height:1.6;">Not: Soğuk Hava Deposu için dağıtım/güç bedeli mevzuatta ayrıca belirtilmediğinden varsayılan olarak Sanayi değerleriyle eşleştirilmiştir — gerekirse yukarıdan güncelleyebilirsiniz.</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-action="close-modal">Vazgeç</button>
+        <button class="btn btn-navy" data-action="save-settings">Parametreleri Kaydet</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================= ACTIONS ============================= */
+function validateCustomer(v){
+  const errs = [];
+  if(!v.name.trim()) errs.push('Müşteri adı boş olamaz.');
+  if(!v.aboneGrubu) errs.push('Abone grubu seçilmelidir.');
+  if(!v.tarifeTipi) errs.push('Tarife tipi seçilmelidir.');
+  if(v.tuketim === '' || isNaN(v.tuketim) || Number(v.tuketim) <= 0) errs.push('Toplam tüketim geçerli bir sayı olmalıdır.');
+  if(v.tarifeTipi === 'Çift Terim' && (v.sozlesmeGucu === '' || isNaN(v.sozlesmeGucu) || Number(v.sozlesmeGucu) < 0)) errs.push('Çift terimli tarifede sözleşme gücü girilmelidir.');
+  if(v.ptf === '' || isNaN(v.ptf) || Number(v.ptf) < 0) errs.push('PTF değeri boş veya geçersiz olamaz.');
+  if(v.yekdem === '' || isNaN(v.yekdem) || Number(v.yekdem) < 0) errs.push('YEKDEM değeri boş veya geçersiz olamaz.');
+  return errs;
+}
+
+function saveCustomer(id){
+  const v = {
+    name: document.getElementById('f-name').value,
+    aboneGrubu: document.getElementById('f-abone').value,
+    tarifeTipi: document.getElementById('f-tarife').value,
+    tuketimDonemi: document.getElementById('f-donem').value,
+    tuketim: document.getElementById('f-tuketim').value,
+    sozlesmeGucu: document.getElementById('f-guc').value,
+    ptf: document.getElementById('f-ptf').value,
+    ptfUnit: document.getElementById('f-ptf-unit').value,
+    yekdem: document.getElementById('f-yekdem').value,
+    yekdemUnit: document.getElementById('f-yekdem-unit').value,
+    gucAsimMiktar: document.getElementById('f-gucasim').value,
+    gucAsimBirim: document.getElementById('f-gucasimbirim').value,
+  };
+  const errs = validateCustomer(v);
+  if(errs.length){
+    const box = document.getElementById('customerError');
+    box.innerHTML = errs.map(e=>'• '+esc(e)).join('<br>');
+    box.classList.add('show');
+    return;
+  }
+  const record = {
+    name: v.name.trim(), aboneGrubu: v.aboneGrubu, tarifeTipi: v.tarifeTipi, tuketimDonemi: v.tuketimDonemi.trim(),
+    tuketim: Number(v.tuketim), sozlesmeGucu: Number(v.sozlesmeGucu||0),
+    ptf: Number(v.ptf), ptfUnit: v.ptfUnit, yekdem: Number(v.yekdem), yekdemUnit: v.yekdemUnit,
+    gucAsimMiktar: Number(v.gucAsimMiktar||0), gucAsimBirim: Number(v.gucAsimBirim||0)
+  };
+  if(id){
+    const existing = state.customers.find(c=>c.id===id);
+    Object.assign(existing, record);
+    toast('Müşteri bilgileri güncellendi.');
+  } else {
+    record.id = uid();
+    record.suppliers = [];
+    state.customers.push(record);
+    state.activeCustomerId = record.id;
+    toast('Müşteri eklendi.');
+  }
+  closeModal();
+  saveState();
+  render();
+}
+
+function deleteCustomer(id){
+  const c = state.customers.find(x=>x.id===id);
+  if(!c) return;
+  if(!confirm(`"${c.name}" müşterisini ve tüm karşılaştırmalarını silmek istediğinize emin misiniz?`)) return;
+  state.customers = state.customers.filter(x=>x.id!==id);
+  if(state.activeCustomerId === id) state.activeCustomerId = state.customers[0]?.id || null;
+  saveState();
+  render();
+  toast('Müşteri silindi.');
+}
+
+function validateSupplier(v){
+  const errs = [];
+  if(!v.name.trim()) errs.push('Tedarikçi adı boş olamaz.');
+  if(v.marj === '' || isNaN(v.marj) || Number(v.marj) < 0) errs.push('Marj oranı negatif olamaz veya boş bırakılamaz.');
+  if(v.teminatType === 'Ozel' && (v.teminatCustom === '' || isNaN(v.teminatCustom) || Number(v.teminatCustom) < 0)) errs.push('Özel teminat tutarı geçersiz.');
+  if(v.vade === '__custom__' && !v.vadeCustom.trim()) errs.push('Özel vade değeri girilmelidir.');
+  return errs;
+}
+
+function saveSupplier(id){
+  const customer = getActiveCustomer();
+  if(!customer) return;
+  const v = {
+    name: document.getElementById('s-name').value,
+    marj: document.getElementById('s-marj').value,
+    teminatType: document.getElementById('s-teminat').value,
+    teminatCustom: document.getElementById('s-teminat-custom') ? document.getElementById('s-teminat-custom').value : '',
+    vade: document.getElementById('s-vade').value,
+    vadeCustom: document.getElementById('s-vade-custom') ? document.getElementById('s-vade-custom').value : '',
+    aciklama: document.getElementById('s-aciklama').value
+  };
+  const errs = validateSupplier(v);
+  if(errs.length){
+    const box = document.getElementById('supplierError');
+    box.innerHTML = errs.map(e=>'• '+esc(e)).join('<br>');
+    box.classList.add('show');
+    return;
+  }
+  const record = {
+    name: v.name.trim(), marj: Number(v.marj), teminatType: v.teminatType,
+    teminatCustom: Number(v.teminatCustom||0),
+    vade: v.vade === '__custom__' ? v.vadeCustom.trim() : v.vade,
+    aciklama: v.aciklama.trim()
+  };
+  if(!customer.suppliers) customer.suppliers = [];
+  if(id){
+    const existing = customer.suppliers.find(s=>s.id===id);
+    Object.assign(existing, record);
+    toast('Teklif güncellendi.');
+  } else {
+    record.id = uid();
+    customer.suppliers.push(record);
+    toast('Tedarikçi teklifi eklendi.');
+  }
+  closeModal();
+  saveState();
+  render();
+}
+
+function deleteSupplier(id){
+  const customer = getActiveCustomer();
+  if(!customer) return;
+  customer.suppliers = (customer.suppliers||[]).filter(s=>s.id!==id);
+  saveState();
+  render();
+  toast('Teklif silindi.');
+}
+
+function saveSettings(){
+  const groups = ['Sanayi','Ticarethane','SogukHava'];
+  const s = state.settings;
+  groups.forEach(k=>{
+    s.dagitim[k].cift = Number(document.getElementById(`set-dag-${k}-cift`).value) || 0;
+    s.dagitim[k].tek  = Number(document.getElementById(`set-dag-${k}-tek`).value) || 0;
+    s.guc[k].cift     = Number(document.getElementById(`set-guc-${k}`).value) || 0;
+    s.btv[k]          = Number(document.getElementById(`set-btv-${k}`).value) || 0;
+  });
+  s.kdv = Number(document.getElementById('set-kdv').value) || 0;
+  closeModal();
+  saveState();
+  render();
+  toast('Tarife parametreleri kaydedildi.');
+}
+
+/* ============================= PDF EXPORT ============================= */
+function pdfCardHtml(customer, item, isBest, bestCalc, allMarjs){
+  const s = item.supplier, c = item.calc;
+  const minM = Math.min(...allMarjs), maxM = Math.max(...allMarjs);
+  const range = (maxM - minM) || 1;
+  const pos = ((s.marj||0) - minM) / range * 100;
+
+  const teminatLabel = s.teminatType === 'Ozel' ? 'Özel Tutar' : `${s.teminatType} Fatura`;
+  const diffTL = c.faturaToplami - bestCalc.faturaToplami;
+  const diffPct = bestCalc.faturaToplami ? (diffTL / bestCalc.faturaToplami * 100) : 0;
+  const disadvHtml = isBest
+    ? `<div class="pt-disadv ref">★ Referans Teklif</div>`
+    : `<div class="pt-disadv bad">+${fmtTL(diffTL)} (+%${fmtNum(diffPct,1)})</div>`;
+
+  return `
+  <div class="pt-card ${isBest?'best':''}">
+    ${isBest ? `<div class="pt-ribbon">★ EN İYİ TEKLİF</div>` : ''}
+    <div class="pt-name">${esc(s.name)}</div>
+    <div class="pt-marjline"><span>Marj Oranı</span><b>%${fmtNum(s.marj,2)}</b></div>
+    <div class="pt-gauge"><div class="pt-gauge-fill"></div><div class="pt-gauge-mark" style="left:${pos}%;"></div></div>
+    <div class="pt-price">Birim Fiyat: <b>${fmtPrice4(c.birimFiyat)} TL/kWh</b></div>
+    <div class="pt-rows">
+      <div class="pt-row"><span>Aktif Toplam</span><span>${fmtTL(c.aktifToplam)}</span></div>
+      <div class="pt-row"><span>Dağıtım Bedeli</span><span>${fmtTL(c.dagitimToplam)}</span></div>
+      ${customer.tarifeTipi==='Çift Terim' ? `<div class="pt-row"><span>Güç Bedeli</span><span>${fmtTL(c.gucBedeliToplam)}</span></div>` : ''}
+      <div class="pt-row"><span>BTV (%${fmtNum(c.btvOrani,0)})</span><span>${fmtTL(c.btv)}</span></div>
+      <div class="pt-row"><span>KDV (%${fmtNum(state.settings.kdv,0)})</span><span>${fmtTL(c.kdv)}</span></div>
+    </div>
+    <div class="pt-total"><div class="tl">Toplam Fatura</div><div class="tv">${fmtTL(c.faturaToplami)}</div></div>
+    <div class="pt-tags">
+      <div class="pt-tag">Teminat: ${esc(teminatLabel)}</div>
+      <div class="pt-tag">Vade: ${esc(s.vade)}</div>
+    </div>
+    ${disadvHtml}
+  </div>`;
+}
+
+function exportPdf(){
+  const customer = getActiveCustomer();
+  if(!customer) return;
+  const list = sortedSuppliersWithCalc(customer);
+  if(list.length === 0){ toast('PDF oluşturmak için en az bir tedarikçi teklifi ekleyin.', true); return; }
+
+  const count = list.length;
+  const cols = count===1?1 : count===2?2 : count===3?3 : count===4?4 : 5;
+  const scale = count<=4 ? 15 : count<=8 ? 13.2 : count<=12 ? 11.6 : count<=16 ? 10.4 : 9.2;
+
+  const best = list[0];
+  const allMarjs = (customer.suppliers||[]).map(x=>x.marj||0);
+  const worst = list[list.length-1];
+  const savingTL = worst.calc.faturaToplami - best.calc.faturaToplami;
+  const savingPct = worst.calc.faturaToplami ? (savingTL/worst.calc.faturaToplami*100) : 0;
+
+  const cardsHtml = list.map((item, idx) => pdfCardHtml(customer, item, idx===0, best.calc, allMarjs)).join('');
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('tr-TR');
+
+  document.getElementById('printRoot').innerHTML = `
+  <div class="pt-wrap" style="font-size:${scale}px;">
+    <div class="pt-header">
+      <div>
+        <div class="pt-brand">⚡ ELKOM ELEKTRİK</div>
+        <h1>${esc(customer.name)} — Tedarikçi Teklif Karşılaştırması</h1>
+        <div class="pt-sub">${esc(customer.aboneGrubu)} · ${esc(customer.tarifeTipi)} ${customer.tuketimDonemi ? '· '+esc(customer.tuketimDonemi) : ''}</div>
+      </div>
+      <div class="pt-meta">
+        Karşılaştırma Tarihi: <b>${dateStr}</b><br>
+        PTF: <b>${fmtNum(customer.ptf,4)}</b> TL/${customer.ptfUnit} · YEKDEM: <b>${fmtNum(customer.yekdem,4)}</b> TL/${customer.yekdemUnit}
+      </div>
+    </div>
+    <div class="pt-strip">
+      <div class="pt-stat"><div class="pl">Tüketim</div><div class="pv">${fmtNum(customer.tuketim)} kWh</div></div>
+      <div class="pt-stat"><div class="pl">Teklif Sayısı</div><div class="pv">${count}</div></div>
+      <div class="pt-stat emerald"><div class="pl">En İyi Teklif</div><div class="pv">${esc(best.supplier.name)} · %${fmtNum(best.supplier.marj,2)}</div></div>
+      <div class="pt-stat emerald"><div class="pl">En Düşük Fatura</div><div class="pv">${fmtTL(best.calc.faturaToplami)}</div></div>
+      ${count>=2 ? `<div class="pt-stat emerald"><div class="pl">Tasarruf Avantajı</div><div class="pv">${fmtTL(savingTL)} · %${fmtNum(savingPct,1)}</div></div>` : ''}
+    </div>
+    <div class="pt-grid" style="--cols:${cols};">${cardsHtml}</div>
+    <div class="pt-footer">
+      <span>Bu belge Elkom Elektrik fatura hesaplama motoru ile otomatik olarak oluşturulmuştur.</span>
+      <span>${esc(customer.name)} · ${dateStr}</span>
+    </div>
+  </div>`;
+
+  setTimeout(()=> window.print(), 80);
+}
+
+/* ============================= EVENT DELEGATION ============================= */
+document.addEventListener('click', (e)=>{
+  const overlay = e.target.closest('[data-action="overlay-close"]');
+  if(overlay && e.target === overlay){ closeModal(); return; }
+
+  const t = e.target.closest('[data-action]');
+  if(!t) return;
+  const action = t.dataset.action;
+  const id = t.dataset.id;
+
+  switch(action){
+    case 'open-customer-modal': openCustomerModal(id||null); break;
+    case 'open-supplier-modal': openSupplierModal(id||null); break;
+    case 'open-settings-modal': openSettingsModal(); break;
+    case 'close-modal': closeModal(); break;
+    case 'save-customer': saveCustomer(id||null); break;
+    case 'save-supplier': saveSupplier(id||null); break;
+    case 'save-settings': saveSettings(); break;
+    case 'delete-customer': deleteCustomer(id); break;
+    case 'delete-supplier': deleteSupplier(id); break;
+    case 'select-customer': state.activeCustomerId = id; saveState(); render(); break;
+    case 'export-pdf': exportPdf(); break;
+    case 'toggle-detail': {
+      const pane = document.getElementById('detail-'+id);
+      pane.classList.toggle('open');
+      t.classList.toggle('open');
+      break;
+    }
+  }
+});
+
+/* ============================= INIT ============================= */
+(async function init(){
+  await loadState();
+  if(!state.activeCustomerId && state.customers.length) state.activeCustomerId = state.customers[0].id;
+  render();
+})();
+</script>
+</body>
+</html>
