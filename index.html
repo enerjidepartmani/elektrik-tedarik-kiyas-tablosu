@@ -341,13 +341,23 @@ let state = {
       SogukHava:   { cift: 35.575915 }
     },
     btv: { Sanayi: 1, Ticarethane: 5, SogukHava: 1 },
-    kdv: 20
+    kdv: 20,
+    suppliers: [...VARSAYILAN_TEDARIKCILER]
   }
 };
 
 const ABONE_GRUPLARI = ['Sanayi','Ticarethane','Soğuk Hava Deposu'];
 const TARIFE_TIPLERI = ['Tek Terim','Çift Terim'];
 const VADE_SECENEKLERI = ['T-20','T-15','T-10','T-5','T-1','T+5','T+10','T+15','T+20','T+25','T+30'];
+const VARSAYILAN_TEDARIKCILER = [
+  'AKSA ELEKTRİK','AYDEM','CK AKDENİZ','CK BOĞAZİÇİ','DEPSAŞ','EÇE ENERJİ','EKVATOR ENERJİ',
+  'ENERJİSA','ENERJİSA ÜRETİM','GEDİZ','İPRAGAZ ELEKTRİK','KEPSAŞ','KOLEN','MET','MEPAŞ','MY ENERJİ',
+  'RÖNESANS ELEKTRİK','SANKO','SEPAŞ','SOCAR','ŞİŞECAM ENERJİ','ULUDAĞ ELEKTRİK','YEPAŞ','ZENERGY'
+].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'}));
+function sortedSuppliers(){
+  const list = Array.isArray(state.settings.suppliers) ? state.settings.suppliers : [];
+  return [...list].sort((a,b)=>String(a).localeCompare(String(b),'tr',{sensitivity:'base'}));
+}
 
 function aboneKey(g){ return g==='Sanayi' ? 'Sanayi' : g==='Ticarethane' ? 'Ticarethane' : 'SogukHava'; }
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
@@ -404,7 +414,10 @@ async function loadState(){
           btv: {
             ...state.settings.btv,
             ...(parsed.settings.btv || {})
-          }
+          },
+          suppliers: Array.isArray(parsed.settings.suppliers)
+            ? [...parsed.settings.suppliers]
+            : [...state.settings.suppliers]
         };
       }
 
@@ -789,41 +802,17 @@ function openSupplierModal(supplierId){
         <div class="error-box" id="supplierError"></div>
         <div class="form-grid">
           <div class="field full">
-  <label>Tedarikçi Adı</label>
-  <select id="s-name">
-    <option value="">Tedarikçi seçiniz</option>
-    ${[
-      "AKSA ELEKTRİK",
-      "AYDEM",
-      "CK AKDENİZ",
-      "CK BOĞAZİÇİ",
-      "DEPSAŞ",
-      "EÇE ENERJİ",
-      "EKVATOR ENERJİ",
-      "ENERJİSA",
-      "ENERJİSA ÜRETİM",
-      "GEDİZ",
-      "İPRAGAZ ELEKTRİK",
-      "KEPSAŞ",
-      "KOLEN",
-      "MET",
-      "MEPAŞ",
-      "MY ENERJİ",
-      "RÖNESANS ELEKTRİK",
-      "SANKO",
-      "SEPAŞ",
-      "SOCAR",
-      "ŞİŞECAM ENERJİ",
-      "ULUDAĞ ELEKTRİK",
-      "YEPAŞ",
-      "ZENERGY"
-    ].map(name => `
-      <option value="${esc(name)}" ${s.name === name ? 'selected' : ''}>
-        ${esc(name)}
-      </option>
-    `).join('')}
-  </select>
-</div>
+            <label>Tedarikçi Adı</label>
+            <select id="s-name">
+              <option value="">Tedarikçi seçiniz</option>
+              ${sortedSuppliers().map(name=>`<option value="${esc(name)}" ${s.name===name?'selected':''}>${esc(name)}</option>`).join('')}
+              <option value="__custom__" ${!sortedSuppliers().includes(s.name) && s.name ? 'selected' : ''}>Diğer / Özel Tedarikçi</option>
+            </select>
+          </div>
+          <div class="field full" id="s-name-custom-wrap" style="${!sortedSuppliers().includes(s.name) && s.name ? '' : 'display:none;'}">
+            <label>Özel Tedarikçi Adı</label>
+            <input type="text" id="s-name-custom" value="${!sortedSuppliers().includes(s.name) ? esc(s.name) : ''}" placeholder="Tedarikçi adını yazın">
+          </div>
           <div class="field">
             <label>Marj Oranı (%)</label>
             <input type="number" id="s-marj" value="${s.marj}" min="0" step="any" placeholder="Örn. 3.25">
@@ -863,6 +852,10 @@ function openSupplierModal(supplierId){
     </div>
   </div>`;
 
+  document.getElementById('s-name').addEventListener('change', e=>{
+    document.getElementById('s-name-custom-wrap').style.display = e.target.value==='__custom__' ? '' : 'none';
+    if(e.target.value !== '__custom__') document.getElementById('s-name-custom').value = '';
+  });
   document.getElementById('s-teminat').addEventListener('change', e=>{
     document.getElementById('s-teminat-custom-wrap').style.display = e.target.value==='Ozel' ? '' : 'none';
   });
@@ -875,11 +868,12 @@ function openSettingsModal(){
   const st = state.settings;
   const root = document.getElementById('modalRoot');
   const groups = [['Sanayi','Sanayi'],['Ticarethane','Ticarethane'],['SogukHava','Soğuk Hava Deposu']];
+  const suppliers = sortedSuppliers();
   root.innerHTML = `
   <div class="modal-overlay" data-action="overlay-close">
     <div class="modal wide" data-stop>
       <div class="modal-head">
-        <div><h3>Tarife ve Birim Fiyat Parametreleri</h3><div class="mh-sub">Mevzuat veya tarife değişikliklerinde bu değerleri güncelleyin.</div></div>
+        <div><h3>Tarife ve Birim Fiyat Parametreleri</h3><div class="mh-sub">Mevzuat, tarife veya tedarikçi listesi değişikliklerinde bu değerleri güncelleyin.</div></div>
         <button class="modal-close" data-action="close-modal">✕</button>
       </div>
       <div class="modal-body">
@@ -915,7 +909,28 @@ function openSettingsModal(){
         <table class="settings-table">
           <tr><td style="width:180px;">Genel KDV Oranı</td><td><input type="number" step="any" id="set-kdv" value="${st.kdv}"></td></tr>
         </table>
-        <div style="font-size:11.5px;color:var(--slate-500);line-height:1.6;">Not: Soğuk Hava Deposu için dağıtım/güç bedeli mevzuatta ayrıca belirtilmediğinden varsayılan olarak Sanayi değerleriyle eşleştirilmiştir — gerekirse yukarıdan güncelleyebilirsiniz.</div>
+
+        <div class="settings-group-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span>🏢 Tedarikçi Yönetimi</span>
+          <button class="btn btn-navy btn-sm" data-action="open-master-supplier-modal">+ Tedarikçi Ekle</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--slate-500);line-height:1.6;margin-bottom:10px;">
+          Buradaki liste, “Tedarikçi Teklifi Ekle” ekranındaki dropdown'da otomatik olarak kullanılır ve alfabetik sıralanır.
+          Listede olmayan firmalar teklif ekranındaki “Diğer / Özel Tedarikçi” seçeneğiyle ayrıca girilebilir.
+        </div>
+        <table class="settings-table">
+          <tr><th>Tedarikçi Adı</th><th style="width:150px;">İşlem</th></tr>
+          ${suppliers.length ? suppliers.map((name,idx)=>`
+            <tr>
+              <td>${esc(name)}</td>
+              <td style="white-space:nowrap;">
+                <button class="btn btn-outline btn-sm" data-action="edit-master-supplier" data-name="${esc(name)}">Düzenle</button>
+                <button class="btn btn-outline btn-sm" style="margin-left:5px;" data-action="delete-master-supplier" data-name="${esc(name)}">Sil</button>
+              </td>
+            </tr>`).join('') : `<tr><td colspan="2" style="text-align:center;color:var(--slate-500);">Henüz tedarikçi eklenmemiş.</td></tr>`}
+        </table>
+
+        <div style="font-size:11.5px;color:var(--slate-500);line-height:1.6;margin-top:12px;">Not: Soğuk Hava Deposu için dağıtım/güç bedeli mevzuatta ayrıca belirtilmediğinden varsayılan olarak Sanayi değerleriyle eşleştirilmiştir — gerekirse yukarıdan güncelleyebilirsiniz.</div>
       </div>
       <div class="modal-foot">
         <button class="btn btn-outline" data-action="close-modal">Vazgeç</button>
@@ -923,6 +938,67 @@ function openSettingsModal(){
       </div>
     </div>
   </div>`;
+}
+
+function openMasterSupplierModal(editName=''){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal" data-stop>
+      <div class="modal-head">
+        <div><h3>${editName ? 'Tedarikçiyi Düzenle' : 'Tedarikçi Ekle'}</h3><div class="mh-sub">Tedarikçi listesi yönetimi</div></div>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="error-box" id="masterSupplierError"></div>
+        <div class="field">
+          <label>Tedarikçi Adı</label>
+          <input type="text" id="master-supplier-name" value="${esc(editName)}" placeholder="Örn. ABC ENERJİ" autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-action="open-settings-modal">Vazgeç</button>
+        <button class="btn btn-navy" data-action="save-master-supplier" data-name="${esc(editName)}">${editName ? 'Güncelle' : 'Ekle'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveMasterSupplier(oldName=''){
+  const input = document.getElementById('master-supplier-name');
+  const box = document.getElementById('masterSupplierError');
+  const name = (input?.value || '').trim();
+  if(!name){
+    box.innerHTML = '• Tedarikçi adı boş olamaz.';
+    box.classList.add('show');
+    return;
+  }
+  const suppliers = Array.isArray(state.settings.suppliers) ? [...state.settings.suppliers] : [];
+  const normalized = name.toLocaleUpperCase('tr-TR');
+  const duplicate = suppliers.some(x => x !== oldName && String(x).toLocaleUpperCase('tr-TR') === normalized);
+  if(duplicate){
+    box.innerHTML = '• Bu tedarikçi zaten listede bulunuyor.';
+    box.classList.add('show');
+    return;
+  }
+  if(oldName){
+    const i = suppliers.indexOf(oldName);
+    if(i >= 0) suppliers[i] = name;
+  } else {
+    suppliers.push(name);
+  }
+  state.settings.suppliers = suppliers.sort((a,b)=>String(a).localeCompare(String(b),'tr',{sensitivity:'base'}));
+  saveState();
+  openSettingsModal();
+  toast(oldName ? 'Tedarikçi güncellendi.' : 'Tedarikçi eklendi.');
+}
+
+function deleteMasterSupplier(name){
+  if(!confirm(`"${name}" tedarikçisini tanımlı tedarikçi listesinden silmek istediğinize emin misiniz?\n\nDaha önce eklenmiş tekliflerdeki kayıtlar silinmez.`)) return;
+  state.settings.suppliers = sortedSuppliers().filter(x => x !== name);
+  saveState();
+  openSettingsModal();
+  toast('Tedarikçi listeden silindi.');
 }
 
 /* ============================= ACTIONS ============================= */
@@ -1005,8 +1081,9 @@ function validateSupplier(v){
 function saveSupplier(id){
   const customer = getActiveCustomer();
   if(!customer) return;
+  const nameSelect = document.getElementById('s-name').value;
   const v = {
-    name: document.getElementById('s-name').value,
+    name: nameSelect === '__custom__' ? (document.getElementById('s-name-custom')?.value || '') : nameSelect,
     marj: document.getElementById('s-marj').value,
     teminatType: document.getElementById('s-teminat').value,
     teminatCustom: document.getElementById('s-teminat-custom') ? document.getElementById('s-teminat-custom').value : '',
@@ -1173,6 +1250,10 @@ document.addEventListener('click', (e)=>{
     case 'save-customer': saveCustomer(id||null); break;
     case 'save-supplier': saveSupplier(id||null); break;
     case 'save-settings': saveSettings(); break;
+    case 'open-master-supplier-modal': openMasterSupplierModal(); break;
+    case 'edit-master-supplier': openMasterSupplierModal(t.dataset.name || ''); break;
+    case 'delete-master-supplier': deleteMasterSupplier(t.dataset.name || ''); break;
+    case 'save-master-supplier': saveMasterSupplier(t.dataset.name || ''); break;
     case 'delete-customer': deleteCustomer(id); break;
     case 'delete-supplier': deleteSupplier(id); break;
     case 'select-customer': state.activeCustomerId = id; saveState(); render(); break;
