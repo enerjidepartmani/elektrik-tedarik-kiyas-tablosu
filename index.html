@@ -302,6 +302,27 @@ input,select,textarea{font-family:inherit;}
 <div id="printRoot"></div>
 <div class="toast-wrap" id="toastWrap"></div>
 
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBf4scS-zAC7_UFc1RtDDKXRLIH4LJQFco",
+    authDomain: "tedarik-teklifi-kiyaslama.firebaseapp.com",
+    projectId: "tedarik-teklifi-kiyaslama",
+    storageBucket: "tedarik-teklifi-kiyaslama.firebasestorage.app",
+    messagingSenderId: "828481348733",
+    appId: "1:828481348733:web:bc4fd56433199f3f72bd14"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+  const APP_DOC = db.collection("marjPusulasi").doc("main");
+</script>
+
 <script>
 /* ============================= STATE ============================= */
 const STORAGE_KEY = 'data';
@@ -331,22 +352,72 @@ const VADE_SECENEKLERI = ['T-20','T-15','T-10','T-5','T-1','T+5','T+10','T+15','
 function aboneKey(g){ return g==='Sanayi' ? 'Sanayi' : g==='Ticarethane' ? 'Ticarethane' : 'SogukHava'; }
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
 
-/* ============================= PERSISTENCE ============================= */
+/* ============================= FIREBASE / FIRESTORE PERSISTENCE ============================= */
+/*
+  Veriler artık tarayıcıya değil Firebase Cloud Firestore'a kaydedilir.
+  Koleksiyon: marjPusulasi
+  Doküman: main
+
+  Böylece GitHub Pages üzerinde çalışan uygulama, aynı Firebase verisini
+  farklı cihazlardan da okuyabilir.
+*/
 async function saveState(){
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify({customers: state.customers, settings: state.settings, activeCustomerId: state.activeCustomerId}), false);
-  }catch(e){ console.error('Kaydetme hatası', e); }
+    await APP_DOC.set({
+      customers: state.customers,
+      settings: state.settings,
+      activeCustomerId: state.activeCustomerId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log('Firebase: veriler kaydedildi.');
+    return true;
+  }catch(e){
+    console.error('Firebase kaydetme hatası:', e);
+    toast('Veriler Firebase\'e kaydedilemedi. Firestore kurallarını kontrol edin.', true);
+    return false;
+  }
 }
+
 async function loadState(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      if(parsed.customers) state.customers = parsed.customers;
-      if(parsed.settings) state.settings = Object.assign(state.settings, parsed.settings);
-      if(parsed.activeCustomerId) state.activeCustomerId = parsed.activeCustomerId;
+    const snap = await APP_DOC.get();
+
+    if(snap.exists){
+      const parsed = snap.data();
+
+      if(Array.isArray(parsed.customers)){
+        state.customers = parsed.customers;
+      }
+
+      if(parsed.settings){
+        state.settings = {
+          ...state.settings,
+          ...parsed.settings,
+          dagitim: {
+            ...state.settings.dagitim,
+            ...(parsed.settings.dagitim || {})
+          },
+          guc: {
+            ...state.settings.guc,
+            ...(parsed.settings.guc || {})
+          },
+          btv: {
+            ...state.settings.btv,
+            ...(parsed.settings.btv || {})
+          }
+        };
+      }
+
+      if(parsed.activeCustomerId){
+        state.activeCustomerId = parsed.activeCustomerId;
+      }
     }
-  }catch(e){ /* no existing data yet */ }
+
+    console.log('Firebase: veriler yüklendi.');
+  }catch(e){
+    console.error('Firebase yükleme hatası:', e);
+    toast('Firebase verileri yüklenemedi. Firestore ayarlarını kontrol edin.', true);
+  }
 }
 
 /* ============================= FORMATTERS ============================= */
@@ -1085,9 +1156,24 @@ document.addEventListener('click', (e)=>{
 
 /* ============================= INIT ============================= */
 (async function init(){
-  await loadState();
-  if(!state.activeCustomerId && state.customers.length) state.activeCustomerId = state.customers[0].id;
-  render();
+  try{
+    // Firebase Anonymous Authentication: Firestore kuralları request.auth != null şartını kullanıyor.
+    if(!auth.currentUser){
+      await auth.signInAnonymously();
+    }
+
+    await loadState();
+
+    if(!state.activeCustomerId && state.customers.length){
+      state.activeCustomerId = state.customers[0].id;
+    }
+
+    render();
+  }catch(e){
+    console.error('Firebase kimlik doğrulama / başlangıç hatası:', e);
+    toast('Firebase bağlantısı kurulamadı. Firebase Authentication ve Firestore kurallarını kontrol edin.', true);
+    render();
+  }
 })();
 </script>
 </body>
