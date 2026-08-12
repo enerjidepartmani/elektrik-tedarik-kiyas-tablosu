@@ -325,6 +325,12 @@ input,select,textarea{font-family:inherit;}
 
 <script>
 /* ============================= STATE ============================= */
+const VARSAYILAN_TEDARIKCILER = [
+  'AKSA ELEKTRİK','AYDEM','CK AKDENİZ','CK BOĞAZİÇİ','DEPSAŞ','EÇE ENERJİ','EKVATOR ENERJİ',
+  'ENERJİSA','ENERJİSA ÜRETİM','GEDİZ','İPRAGAZ ELEKTRİK','KEPSAŞ','KOLEN','MET','MEPAŞ','MY ENERJİ',
+  'RÖNESANS ELEKTRİK','SANKO','SEPAŞ','SOCAR','ŞİŞECAM ENERJİ','ULUDAĞ ELEKTRİK','YEPAŞ','ZENERGY'
+].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'}));
+
 const STORAGE_KEY = 'data';
 let state = {
   customers: [],
@@ -349,11 +355,6 @@ let state = {
 const ABONE_GRUPLARI = ['Sanayi','Ticarethane','Soğuk Hava Deposu'];
 const TARIFE_TIPLERI = ['Tek Terim','Çift Terim'];
 const VADE_SECENEKLERI = ['T-20','T-15','T-10','T-5','T-1','T+5','T+10','T+15','T+20','T+25','T+30'];
-const VARSAYILAN_TEDARIKCILER = [
-  'AKSA ELEKTRİK','AYDEM','CK AKDENİZ','CK BOĞAZİÇİ','DEPSAŞ','EÇE ENERJİ','EKVATOR ENERJİ',
-  'ENERJİSA','ENERJİSA ÜRETİM','GEDİZ','İPRAGAZ ELEKTRİK','KEPSAŞ','KOLEN','MET','MEPAŞ','MY ENERJİ',
-  'RÖNESANS ELEKTRİK','SANKO','SEPAŞ','SOCAR','ŞİŞECAM ENERJİ','ULUDAĞ ELEKTRİK','YEPAŞ','ZENERGY'
-].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'}));
 function sortedSuppliers(){
   const list = Array.isArray(state.settings.suppliers) ? state.settings.suppliers : [];
   return [...list].sort((a,b)=>String(a).localeCompare(String(b),'tr',{sensitivity:'base'}));
