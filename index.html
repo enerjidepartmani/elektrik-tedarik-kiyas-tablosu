@@ -354,7 +354,7 @@ let state = {
 
 const ABONE_GRUPLARI = ['Sanayi','Ticarethane','Soğuk Hava Deposu'];
 const TARIFE_TIPLERI = ['Tek Terim','Çift Terim'];
-const VADE_SECENEKLERI = ['T-20','T-15','T-10','T-5','T-1','T+5','T+10','T+15','T+20','T+25','T+30'];
+const VADE_SECENEKLERI = ['T-30','T-15','T-10','T-5','T-1','T+5','T+10','T+15','T+20','T+25','T+30'];
 function sortedSuppliers(){
   const list = Array.isArray(state.settings.suppliers) ? state.settings.suppliers : [];
   return [...list].sort((a,b)=>String(a).localeCompare(String(b),'tr',{sensitivity:'base'}));
