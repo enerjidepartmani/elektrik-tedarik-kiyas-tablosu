@@ -816,7 +816,7 @@ function openSupplierModal(supplierId){
           </div>
           <div class="field">
             <label>Marj Oranı (%)</label>
-            <input type="number" id="s-marj" value="${s.marj}" min="0" step="any" placeholder="Örn. 3.25">
+            <input type="number" id="s-marj" value="${s.marj}" step="any" placeholder="Örn. 3.25">
           </div>
           <div class="field">
             <label>Teminat</label>
@@ -1073,7 +1073,7 @@ function deleteCustomer(id){
 function validateSupplier(v){
   const errs = [];
   if(!v.name.trim()) errs.push('Tedarikçi adı boş olamaz.');
-  if(v.marj === '' || isNaN(v.marj) || Number(v.marj) < 0) errs.push('Marj oranı negatif olamaz veya boş bırakılamaz.');
+  if(v.marj === '' || isNaN(v.marj)) errs.push('Marj oranı boş bırakılamaz ve sayısal bir değer olmalıdır.');
   if(v.teminatType === 'Ozel' && (v.teminatCustom === '' || isNaN(v.teminatCustom) || Number(v.teminatCustom) < 0)) errs.push('Özel teminat tutarı geçersiz.');
   if(v.vade === '__custom__' && !v.vadeCustom.trim()) errs.push('Özel vade değeri girilmelidir.');
   return errs;
